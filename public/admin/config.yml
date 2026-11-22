@@ -7,7 +7,7 @@ media_library:
   name: cloudinary
   config:
     cloud_name: b436ebkd
-    api_key: ""
+    api_key: "943793112489892"
 
 locale: "es"
 
