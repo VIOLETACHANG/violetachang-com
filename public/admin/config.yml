@@ -1,0 +1,32 @@
+backend:
+  name: github
+  repo: VIOLETACHANG/violetachang-com
+  branch: main
+
+media_library:
+  name: cloudinary
+  config:
+    cloud_name: b436ebkd
+    api_key: ""
+
+locale: "es"
+
+collections:
+  - name: "noticias"
+    label: "Noticias y Artículos"
+    folder: "src/content/noticias"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - { label: "Titular", name: "title", widget: "string" }
+      - { label: "Bajada / Resumen SEO", name: "description", widget: "text" }
+      - { label: "Fecha y Hora de Publicación (Programa aquí)", name: "pubDate", widget: "datetime" }
+      - { label: "Categoría", name: "category", widget: "select", options: ["Chile", "Actualidad", "Cultura y Eventos", "Deportes", "Podcast & Multimedia", "Opinión"] }
+      - { label: "Autor / Periodista", name: "author", widget: "string", default: "Violeta Chang B." }
+      - { label: "Cargo del Autor", name: "authorRole", widget: "string", default: "Directora", required: false }
+      - { label: "Fotografía Principal (Cloudinary)", name: "image", widget: "image", required: false }
+      - { label: "Crédito de la Fotografía", name: "photoCredit", widget: "string", default: "Foto: Archivo Violeta Chang", required: false }
+      - { label: "Enlace Video YouTube o TikTok", name: "videoUrl", widget: "string", required: false }
+      - { label: "¿Es Contenido Patrocinado? (Ley Chile)", name: "sponsored", widget: "boolean", default: false }
+      - { label: "Nombre del Auspiciador", name: "sponsorName", widget: "string", required: false }
+      - { label: "Cuerpo de la Noticia (Links se marcan en verde)", name: "body", widget: "markdown" }
