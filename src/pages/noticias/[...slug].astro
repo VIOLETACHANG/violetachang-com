@@ -1,0 +1,81 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const noticias = await getCollection('noticias');
+  return noticias.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+
+const newsSchema = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": entry.data.title,
+  "description": entry.data.description,
+  "datePublished": entry.data.pubDate.toISOString(),
+  "author": [{ "@type": "Person", "name": entry.data.author }],
+  "publisher": {
+    "@type": "Organization",
+    "name": "Violeta Chang - Holding Le Merrer Chang SpA"
+  }
+});
+---
+<BaseLayout title={`${entry.data.title} | Violeta Chang`} description={entry.data.description} schema={newsSchema}>
+  <style>
+    .article-wrapper { max-width: 1100px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: 2.2fr 1fr; gap: 35px; }
+    @media (max-width: 850px) { .article-wrapper { grid-template-columns: 1fr; } }
+    .badge { display: inline-block; background: #4C1D95; color: #FFF; font-size: 0.78rem; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; margin-bottom: 12px; }
+    .badge-sponsored { background: #F59E0B; color: #000; margin-left: 8px; }
+    h1.article-title { font-family: 'Merriweather', serif; font-size: 2.1rem; line-height: 1.25; color: #1E1B4B; margin-bottom: 12px; }
+    .lead { font-size: 1.15rem; color: #334155; margin-bottom: 18px; font-weight: 500; }
+    .meta-box { border-top: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; padding: 10px 0; margin-bottom: 20px; font-size: 0.9rem; color: #475569; }
+    .main-img { width: 100%; border-radius: 10px; max-height: 480px; object-fit: cover; }
+    .photo-credit { font-size: 0.8rem; color: #64748B; font-style: italic; margin: 6px 0 22px; }
+    .article-body { font-size: 1.08rem; max-width: 68ch; }
+    .article-body p { margin-bottom: 18px; }
+    .article-body h2, .article-body h3 { font-family: 'Merriweather', serif; color: #4C1D95; margin: 24px 0 12px; }
+    .ad-box { background: #F8FAFC; border: 1px dashed #94A3B8; height: 250px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 15px; border-radius: 8px; }
+  </style>
+
+  <div class="article-wrapper">
+    <article>
+      <span class="badge">{entry.data.category}</span>
+      {entry.data.sponsored && <span class="badge badge-sponsored">Contenido Patrocinado • {entry.data.sponsorName}</span>}
+      <h1 class="article-title">{entry.data.title}</h1>
+      <p class="lead">{entry.data.description}</p>
+      <div class="meta-box">
+        Por <strong>{entry.data.author}</strong> {entry.data.authorRole ? `(${entry.data.authorRole})` : ''} • Publicado el {entry.data.pubDate.toLocaleDateString('es-CL')}
+      </div>
+
+      {entry.data.image && (
+        <div>
+          <img src={entry.data.image} alt={entry.data.title} class="main-img" />
+          {entry.data.photoCredit && <div class="photo-credit">{entry.data.photoCredit}</div>}
+        </div>
+      )}
+
+      <div class="article-body">
+        <Content />
+      </div>
+
+      {entry.data.videoUrl && (
+        <div style="margin-top:25px; padding:15px; background:#F8FAFC; border-radius:8px;">
+          <strong>Video relacionado:</strong> <a href={entry.data.videoUrl} target="_blank" class="seo-link">Ver transmisión / video completo aquí</a>
+        </div>
+      )}
+    </article>
+
+    <aside>
+      <div class="ad-box">
+        <strong>Auspiciador (300x250 px)</strong>
+        <a href="/#publicidad" class="seo-link" style="margin-top:8px;">Anuncia aquí</a>
+      </div>
+    </aside>
+  </div>
+</BaseLayout>
