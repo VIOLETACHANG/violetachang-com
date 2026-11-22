@@ -2,7 +2,8 @@ backend:
   name: github
   repo: VIOLETACHANG/violetachang-com
   branch: main
-
+base_url: https://www.violetachang.com
+auth_endpoint: /api/auth
 media_library:
   name: cloudinary
   config:
