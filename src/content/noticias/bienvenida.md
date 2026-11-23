@@ -3,7 +3,7 @@ title: "Violeta Chang inicia transmisiones al servicio de la libertad de prensa 
 description: "Con el lema Veritas Ante Omnia, el nuevo medio multiplataforma de Holding Le Merrer Chang SpA prepara su lanzamiento oficial este 26 de noviembre en Santiago."
 pubDate: 2026-11-22T12:00:00-03:00
 category: "Chile"
-author: "Violeta Chang B."
+author: "Violeta Chang"
 authorRole: "Directora"
 photoCredit: "Foto: Archivo Violeta Chang"
 sponsored: false
