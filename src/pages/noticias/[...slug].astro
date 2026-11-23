@@ -47,6 +47,7 @@ const newsSchema = JSON.stringify({
     <article>
       <span class="badge">{entry.data.category}</span>
       {entry.data.sponsored && <span class="badge badge-sponsored">Contenido Patrocinado • {entry.data.sponsorName}</span>}
+      {entry.data.es_comunicado && <span class="badge">Comunicado de Prensa</span>}
       <h1 class="article-title">{entry.data.title}</h1>
       <p class="lead">{entry.data.description}</p>
       <div class="meta-box">
