@@ -28,6 +28,9 @@ collections:
       - { label: "Fotografía Principal (Cloudinary)", name: "image", widget: "image", required: false }
       - { label: "Crédito de la Fotografía", name: "photoCredit", widget: "string", default: "Foto: Archivo Violeta Chang", required: false }
       - { label: "Enlace Video YouTube o TikTok", name: "videoUrl", widget: "string", required: false }
+      - { label: "¿Es Titular Principal?", name: "titular_principal", widget: "boolean", default: false }
+      - { label: "¿Es Comunicado de Prensa? (Texto íntegro)", name: "es_comunicado", widget: "boolean", default: false }
+      - { label: "¿Es Destacada?", name: "destacada", widget: "boolean", default: false }
       - { label: "¿Es Contenido Patrocinado? (Ley Chile)", name: "sponsored", widget: "boolean", default: false }
       - { label: "Nombre del Auspiciador", name: "sponsorName", widget: "string", required: false }
       - { label: "Cuerpo de la Noticia (Links se marcan en verde)", name: "body", widget: "markdown" }
