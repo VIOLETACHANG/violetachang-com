@@ -22,7 +22,7 @@ collections:
       - { label: "Titular", name: "title", widget: "string" }
       - { label: "Bajada / Resumen SEO", name: "description", widget: "text" }
       - { label: "Fecha y Hora de Publicación (Programa aquí)", name: "pubDate", widget: "datetime" }
-      - { label: "Categoría", name: "category", widget: "select", options: ["Chile", "Actualidad", "Cultura y Eventos", "Deportes", "Podcast & Multimedia", "Opinión"] }
+      - { label: "Categoría", name: "category", widget: "select", options: ["Política", "Economía", "Cultura y Eventos", "Deportes", "Crónica", "Ciencia y Tecnología", "Medioambiente", "Opinión"] }
       - { label: "Autor / Periodista", name: "author", widget: "string", default: "Violeta Chang" }
       - { label: "Cargo del Autor", name: "authorRole", widget: "string", default: "Directora", required: false }
       - { label: "Fotografía Principal (Cloudinary)", name: "image", widget: "image", required: false }
