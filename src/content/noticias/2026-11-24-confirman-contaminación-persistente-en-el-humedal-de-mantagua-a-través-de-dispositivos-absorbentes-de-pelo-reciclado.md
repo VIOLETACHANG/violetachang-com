@@ -5,8 +5,9 @@ description: "Comunicado de prensa de fundación Matter of Trust Chile: 28 de
   septiembre de 2026."
 pubDate: 2026-11-24T13:55:54.464Z
 category: Medioambiente
-author: Violeta Chang
-authorRole: Directora
+author: Valentina Cifuentes
+authorRole: Colaborador
+image: https://res.cloudinary.com/b436ebkd/image/upload/v1795526309/Captura_de_pantalla_2026-11-24_a_las_10.17.45_a._m..png
 photoCredit: "Foto: Fundación Matter of Trust Chile"
 titular_principal: false
 ---
