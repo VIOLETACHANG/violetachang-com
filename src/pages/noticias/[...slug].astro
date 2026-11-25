@@ -1,82 +1,140 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { articleSlug } from '../../lib/article-url';
+import { articleImageUrl } from '../../lib/images';
+import { slugifyTaxonomy } from '../../lib/taxonomy';
+import { safeExternalUrl } from '../../lib/urls';
 
 export async function getStaticPaths() {
-  const noticias = await getCollection('noticias');
-  return noticias.map((entry) => ({
-    params: { slug: entry.slug },
-    props: { entry },
-  }));
+  const articles = await getCollection('noticias');
+  const now = new Date();
+  return articles
+    .filter((entry) => entry.data.pubDate <= now)
+    .map((entry) => ({ params: { slug: articleSlug(entry.slug, entry.data.urlSlug) }, props: { entry } }));
 }
 
 const { entry } = Astro.props;
 const { Content } = await entry.render();
-
+const data = entry.data;
+const authorName = data.author?.trim() || 'Redacción';
+const authorProfile = safeExternalUrl(data.authorUrl);
+const videoUrl = safeExternalUrl(data.videoUrl);
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://violetachang.com/').href;
+const articleImage = articleImageUrl(data.image, 'article');
+const mobileArticleImage = data.imageMobile
+  ? articleImageUrl(data.imageMobile, 'source')
+  : articleImageUrl(data.image, 'articleMobile');
+const socialImage = articleImageUrl(data.image, 'social');
+const authorType = data.authorType === 'Organización' ? 'Organization' : 'Person';
+const updatedDate = data.updatedDate ?? data.pubDate;
 const newsSchema = JSON.stringify({
-  "@context": "https://schema.org",
-  "@type": "NewsArticle",
-  "headline": entry.data.title,
-  "description": entry.data.description,
-  "datePublished": entry.data.pubDate.toISOString(),
-  "author": [{ "@type": "Person", "name": entry.data.author }],
-  "publisher": {
-    "@type": "Organization",
-    "name": "Violeta Chang - Holding Le Merrer Chang SpA"
-  }
+  '@context': 'https://schema.org',
+  '@type': 'NewsArticle',
+  headline: data.title,
+  description: data.seoDescription?.trim() || data.description,
+  image: socialImage ? [socialImage] : undefined,
+  datePublished: data.pubDate.toISOString(),
+  dateModified: updatedDate.toISOString(),
+  mainEntityOfPage: canonicalUrl,
+  author: {
+    '@type': authorType,
+    name: authorName,
+    ...(authorProfile ? { url: authorProfile } : {}),
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Violeta Chang - Holding Le Merrer Chang SpA',
+    logo: { '@type': 'ImageObject', url: new URL('/logo.webp', Astro.site ?? 'https://violetachang.com/').href },
+  },
 });
+const pageTitle = data.seoTitle?.trim() || data.title;
+const pageDescription = data.seoDescription?.trim() || data.description;
 ---
-<BaseLayout title={`${entry.data.title} | Violeta Chang`} description={entry.data.description} schema={newsSchema}>
-  <style>
-    .article-wrapper { max-width: 1100px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: 2.2fr 1fr; gap: 35px; }
-    @media (max-width: 850px) { .article-wrapper { grid-template-columns: 1fr; } }
-    .badge { display: inline-block; background: #4C1D95; color: #FFF; font-size: 0.78rem; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; margin-bottom: 12px; }
-    .badge-sponsored { background: #F59E0B; color: #000; margin-left: 8px; }
-    h1.article-title { font-family: 'Merriweather', serif; font-size: 2.1rem; line-height: 1.25; color: #1E1B4B; margin-bottom: 12px; }
-    .lead { font-size: 1.15rem; color: #334155; margin-bottom: 18px; font-weight: 500; }
-    .meta-box { border-top: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; padding: 10px 0; margin-bottom: 20px; font-size: 0.9rem; color: #475569; }
-    .main-img { width: 100%; border-radius: 10px; max-height: 480px; object-fit: cover; }
-    .photo-credit { font-size: 0.8rem; color: #64748B; font-style: italic; margin: 6px 0 22px; }
-    .article-body { font-size: 1.08rem; max-width: 68ch; }
-    .article-body p { margin-bottom: 18px; }
-    .article-body h2, .article-body h3 { font-family: 'Merriweather', serif; color: #4C1D95; margin: 24px 0 12px; }
-    .ad-box { background: #F8FAFC; border: 1px dashed #94A3B8; height: 250px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 15px; border-radius: 8px; }
-  </style>
-
-  <div class="article-wrapper">
-    <article>
-      <span class="badge">{entry.data.category}</span>
-      {entry.data.sponsored && <span class="badge badge-sponsored">Contenido Patrocinado • {entry.data.sponsorName}</span>}
-      {entry.data.es_comunicado && <span class="badge">Comunicado de Prensa</span>}
-      <h1 class="article-title">{entry.data.title}</h1>
-      <p class="lead">{entry.data.description}</p>
-      <div class="meta-box">
-        Por <strong>{entry.data.author}</strong> {entry.data.authorRole ? `(${entry.data.authorRole})` : ''} • Publicado el {entry.data.pubDate.toLocaleDateString('es-CL')}
+<BaseLayout title={pageTitle} description={pageDescription} schema={newsSchema} canonical={canonicalUrl} ogImage={socialImage} ogType="article">
+  <main class="article-layout">
+    <article class="article">
+      <nav class="breadcrumbs" aria-label="Ruta de navegación">
+        <a href="/">Portada</a><span aria-hidden="true">/</span><a href={`/categorias/${slugifyTaxonomy(data.category)}/`}>{data.category}</a>
+      </nav>
+      <div class="article__badges">
+        <a class="badge" href={`/categorias/${slugifyTaxonomy(data.category)}/`}>{data.category}</a>
+        {data.es_comunicado && <span class="badge badge--neutral">Comunicado de prensa</span>}
+        {data.sponsored && <span class="badge badge--gold">Contenido patrocinado{data.sponsorName ? ` · ${data.sponsorName}` : ''}</span>}
+      </div>
+      <h1 class="article__title">{data.title}</h1>
+      <p class="article__lead">{data.description}</p>
+      <div class="article__meta">
+        {authorProfile ? <a href={authorProfile} target="_blank" rel="noopener noreferrer">{authorName}</a> : <strong>{authorName}</strong>}
+        {data.authorRole && <span> · {data.authorRole}</span>}
+        <span> · Publicado el </span>
+        <time datetime={data.pubDate.toISOString()}>{data.pubDate.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Santiago' })}</time>
+        {data.updatedDate && <span> · Actualizado el <time datetime={data.updatedDate.toISOString()}>{data.updatedDate.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Santiago' })}</time></span>}
       </div>
 
-      {entry.data.image && (
-        <div>
-          <img src={entry.data.image} alt={entry.data.title} class="main-img" />
-          {entry.data.photoCredit && <div class="photo-credit">{entry.data.photoCredit}</div>}
-        </div>
+      {articleImage && (
+        <figure class="article__figure">
+          <picture>
+            {mobileArticleImage && mobileArticleImage !== articleImage && <source media="(max-width: 640px)" srcset={mobileArticleImage} />}
+            <img src={articleImage} alt={data.title} class="article__image" fetchpriority="high" />
+          </picture>
+          {data.photoCredit && <figcaption>{data.photoCredit}</figcaption>}
+        </figure>
       )}
 
-      <div class="article-body">
-        <Content />
-      </div>
+      <div class="article__body"><Content /></div>
 
-      {entry.data.videoUrl && (
-        <div style="margin-top:25px; padding:15px; background:#F8FAFC; border-radius:8px;">
-          <strong>Video relacionado:</strong> <a href={entry.data.videoUrl} target="_blank" class="seo-link">Ver transmisión / video completo aquí</a>
-        </div>
+      {data.tags?.length > 0 && (
+        <nav class="article__tags" aria-label="Etiquetas del artículo">
+          <strong>Temas:</strong>
+          {data.tags.map((tag) => <a href={`/etiquetas/${slugifyTaxonomy(tag)}/`}>{tag}</a>)}
+        </nav>
       )}
+
+      {videoUrl && (
+        <p class="article__video"><strong>Video relacionado:</strong> <a href={videoUrl} target="_blank" rel="noopener noreferrer">Ver video o transmisión</a></p>
+      )}
+      <a class="back-link" href="/">← Volver a la portada</a>
     </article>
 
-    <aside>
-      <div class="ad-box">
-        <strong>Auspiciador (300x250 px)</strong>
-        <a href="/#publicidad" class="seo-link" style="margin-top:8px;">Anuncia aquí</a>
+    <aside class="article-aside" aria-label="Anuncios y publicidad">
+      <div class="article-aside__ad">
+        <strong>Espacio publicitario</strong>
+        <a href="/#publicidad">Anuncia junto a nuestras noticias</a>
       </div>
     </aside>
-  </div>
+  </main>
 </BaseLayout>
+
+<style>
+  .article-layout { width: min(1120px, calc(100% - 40px)); margin: 32px auto 54px; display: grid; grid-template-columns: minmax(0, 760px) minmax(240px, 300px); gap: 34px; align-items: start; }
+  .article { min-width: 0; }
+  .breadcrumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; color: #64748B; font-size: .82rem; }
+  .breadcrumbs a { color: #4B1D91; text-underline-offset: 3px; }
+  .article__badges { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+  .badge { display: inline-flex; padding: 4px 10px; border-radius: 999px; background: #F1EAFB; color: #4B1D91; font-size: .72rem; font-weight: 800; text-decoration: none; text-transform: uppercase; }
+  .badge--neutral { background: #EEF0F4; color: #334155; }
+  .badge--gold { background: #F4E6C4; color: #5B4300; }
+  .article__title { margin: 0 0 12px; color: #1E1B4B; font-family: 'Merriweather', Georgia, serif; font-size: clamp(2rem, 4vw, 2.8rem); line-height: 1.25; }
+  .article__lead { margin: 0 0 16px; color: #475569; font-size: 1.15rem; line-height: 1.6; }
+  .article__meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px; padding: 12px 0; border-top: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; color: #64748B; font-size: .86rem; }
+  .article__meta a { color: #4B1D91; font-weight: 700; }
+  .article__figure { margin: 22px 0; }
+  .article__image { display: block; width: 100%; height: auto; border-radius: 10px; background: #F8F6FB; }
+  .article__figure figcaption { margin-top: 6px; color: #64748B; font-size: .78rem; font-style: italic; }
+  .article__body { max-width: 72ch; color: #253047; font-size: 1.08rem; line-height: 1.8; overflow-wrap: anywhere; }
+  .article__body p { margin: 0 0 1.2em; }
+  .article__body h2, .article__body h3 { margin: 1.6em 0 .6em; color: #4B1D91; font-family: 'Merriweather', Georgia, serif; line-height: 1.35; }
+  .article__body a { color: #4B1D91; font-weight: 700; text-decoration-color: #C7A75E; text-underline-offset: 3px; }
+  .article__body blockquote { margin: 1.5em 0; padding: 12px 18px; border-left: 4px solid #C7A75E; background: #FBFAFD; color: #475569; }
+  .article__tags { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 24px 0 16px; color: #475569; font-size: .85rem; }
+  .article__tags a { padding: 3px 9px; border: 1px solid #E6D7AE; border-radius: 999px; color: #5B4300; text-decoration: none; }
+  .article__video { padding: 15px; border: 1px solid #E7E1EF; border-radius: 10px; background: #FBFAFD; }
+  .article__video a, .back-link { color: #4B1D91; font-weight: 700; text-underline-offset: 3px; }
+  .back-link { display: inline-block; margin-top: 12px; }
+  .article-aside__ad { min-height: 250px; aspect-ratio: 6 / 5; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; border: 1px dashed #B9A56E; border-radius: 10px; background: #FBFAFD; text-align: center; color: #475569; }
+  .article-aside__ad strong { color: #4B1D91; }
+  .article-aside__ad a { color: #806000; font-weight: 700; }
+  @media (max-width: 860px) { .article-layout { grid-template-columns: 1fr; } .article-aside { order: 2; } .article-aside__ad { max-width: 360px; } }
+  @media (max-width: 560px) { .article-layout { width: calc(100% - 28px); margin-top: 22px; } .article__title { font-size: 1.8rem; } .article__body { font-size: 1rem; } }
+</style>
