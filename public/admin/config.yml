@@ -2,33 +2,55 @@ backend:
   name: github
   repo: VIOLETACHANG/violetachang-com
   branch: main
-  base_url: https://www.violetachang.com
+  base_url: https://violetachang.com
   auth_endpoint: /api/auth
 media_library:
   name: cloudinary
   config:
     cloud_name: b436ebkd
     api_key: "943793112489892"
-
 locale: "es"
-
 collections:
   - name: "noticias"
-    label: "Noticias y Artículos"
+    label: "Noticias y artículos"
     folder: "src/content/noticias"
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
     fields:
       - { label: "Titular", name: "title", widget: "string" }
-      - { label: "Bajada / Resumen SEO", name: "description", widget: "text" }
-      - { label: "Fecha y Hora de Publicación (Programa aquí)", name: "pubDate", widget: "datetime" }
-      - { label: "Categoría", name: "category", widget: "select", options: ["Política", "Economía", "Cultura y Eventos", "Deportes", "Crónica", "Ciencia y Tecnología", "Medioambiente", "Opinión"] }
-      - { label: "Autor / Periodista", name: "author", widget: "string", default: "Violeta Chang" }
-      - { label: "Cargo del Autor", name: "authorRole", widget: "string", default: "Directora", required: false }
-      - { label: "Fotografía Principal (Cloudinary)", name: "image", widget: "image", required: false }
-      - { label: "Crédito de la Fotografía", name: "photoCredit", widget: "string", default: "Foto: Archivo Violeta Chang", required: false }
-      - { label: "Enlace Video YouTube o TikTok", name: "videoUrl", widget: "string", required: false }
-      - { label: "¿Es Titular Principal?", name: "titular_principal", widget: "boolean", default: false }
-     
-      - { label: "Nombre del Auspiciador", name: "sponsorName", widget: "string", required: false }
-      - { label: "Cuerpo de la Noticia (Links se marcan en verde)", name: "body", widget: "markdown" }
+      - { label: "URL personalizada (opcional)", name: "urlSlug", widget: "string", required: false, hint: "Déjala vacía para usar el titular automáticamente. Si la completas, escribe palabras separadas por guiones, sin espacios." }
+      - { label: "Bajada / resumen", name: "description", widget: "text" }
+      - { label: "Fecha y hora de publicación", name: "pubDate", widget: "datetime" }
+      - { label: "Fecha de actualización", name: "updatedDate", widget: "datetime", required: false }
+      - { label: "Categoría", name: "category", widget: "select", options: ["Política", "Economía", "Actualidad", "Opinión", "Cultura y Eventos", "Deportes", "Ciencia y Tecnología", "Educación", "Medioambiente", "Crónica", "Chile"] }
+      - { label: "Autor/a o agencia", name: "author", widget: "string", required: false }
+      - { label: "Tipo de autoría", name: "authorType", widget: "select", options: ["Persona", "Organización"], default: "Persona", required: false }
+      - { label: "Cargo o función", name: "authorRole", widget: "string", required: false }
+      - { label: "Perfil o web del autor/agencia", name: "authorUrl", widget: "string", required: false }
+      - { label: "Fotografía principal", name: "image", widget: "image", required: false }
+      - { label: "Recorte alternativo para móvil (opcional)", name: "imageMobile", widget: "image", required: false, hint: "Si lo dejas vacío, la web crea automáticamente una versión adaptada a celular. Úsalo solo si necesitas elegir otro encuadre." }
+      - { label: "Crédito de la fotografía", name: "photoCredit", widget: "string", required: false }
+      - { label: "Enlace a video de YouTube o TikTok", name: "videoUrl", widget: "string", required: false }
+      - { label: "Etiquetas temáticas", name: "tags", widget: "list", required: false, hint: "Añade una o varias etiquetas, por ejemplo: educación, becas, ciencia o salud." }
+      - { label: "¿Elegir como titular principal?", name: "titular_principal", widget: "boolean", default: false, required: false }
+      - { label: "¿Es comunicado de prensa?", name: "es_comunicado", widget: "boolean", default: false, required: false }
+      - { label: "¿Es contenido patrocinado?", name: "sponsored", widget: "boolean", default: false, required: false }
+      - { label: "Nombre del auspiciador", name: "sponsorName", widget: "string", required: false }
+      - { label: "Título SEO (opcional)", name: "seoTitle", widget: "string", required: false, hint: "Déjalo vacío para usar el titular como título de la página." }
+      - { label: "Descripción SEO (opcional)", name: "seoDescription", widget: "text", required: false, hint: "Déjala vacía para usar la bajada." }
+      - { label: "Cuerpo de la noticia", name: "body", widget: "markdown" }
+  - name: "ajustes-sitio"
+    label: "Ajustes de portada y redes"
+    files:
+      - file: "src/data/site-settings.json"
+        label: "Portada y redes oficiales"
+        name: "site"
+        fields:
+          - { label: "Banner publicitario", name: "bannerImage", widget: "image", required: false, hint: "Se mostrará junto o debajo de las noticias. Déjalo vacío cuando no haya una campaña activa." }
+          - { label: "Enlace de destino del banner", name: "bannerUrl", widget: "string", required: false }
+          - { label: "Texto alternativo del banner", name: "bannerAlt", widget: "string", required: false }
+          - { label: "Canal de YouTube", name: "youtubeUrl", widget: "string", required: false }
+          - { label: "Perfil de TikTok", name: "tiktokUrl", widget: "string", required: false }
+          - { label: "Canal de WhatsApp", name: "whatsappUrl", widget: "string", required: false }
+          - { label: "LinkedIn de la directora (opcional)", name: "directorLinkedinUrl", widget: "string", required: false }
+          - { label: "LinkedIn del director suplente (opcional)", name: "deputyLinkedinUrl", widget: "string", required: false }
