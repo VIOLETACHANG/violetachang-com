@@ -1,0 +1,50 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import NewsCard from '../../components/NewsCard.astro';
+import { slugifyTaxonomy } from '../../lib/taxonomy';
+
+export async function getStaticPaths() {
+  const now = new Date();
+  const articles = await getCollection('noticias', ({ data }) => data.pubDate <= now);
+  const tags = new Map<string, string>();
+  for (const article of articles) {
+    for (const tag of article.data.tags ?? []) {
+      const slug = slugifyTaxonomy(tag);
+      if (slug && !tags.has(slug)) tags.set(slug, tag);
+    }
+  }
+  return [...tags.entries()].map(([slug, tag]) => ({ params: { slug }, props: { tag } }));
+}
+
+const { tag } = Astro.props;
+const now = new Date();
+const articles = (await getCollection('noticias', ({ data }) => data.pubDate <= now))
+  .filter((article) => (article.data.tags ?? []).some((value) => slugifyTaxonomy(value) === Astro.params.slug))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const description = `Noticias y artículos etiquetados “${tag}” en Violeta Chang.`;
+---
+<BaseLayout title={`${tag} | Etiquetas | Violeta Chang`} description={description}>
+  <main class="archive">
+    <p class="eyebrow">Tema</p>
+    <h1>{tag}</h1>
+    <p class="archive__intro">Artículos relacionados con esta etiqueta.</p>
+    {articles.length > 0 ? (
+      <div class="archive__grid">{articles.map((article) => <NewsCard article={article} />)}</div>
+    ) : (
+      <div class="archive__empty"><p>Aún no hay noticias publicadas con esta etiqueta.</p><a href="/">Volver a la portada</a></div>
+    )}
+  </main>
+</BaseLayout>
+
+<style>
+  .archive { width: min(1200px, calc(100% - 40px)); margin: 36px auto 50px; min-height: 42vh; }
+  .eyebrow { margin: 0; color: #806000; font-size: .75rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+  h1 { margin: 4px 0 8px; color: #4B1D91; font-family: 'Merriweather', Georgia, serif; font-size: clamp(2rem, 4vw, 2.7rem); }
+  .archive__intro { margin: 0 0 24px; color: #475569; }
+  .archive__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+  .archive__empty { padding: 20px; border: 1px solid #E7E1EF; border-radius: 10px; background: #FBFAFD; }
+  .archive__empty a { color: #4B1D91; font-weight: 700; }
+  @media (max-width: 900px) { .archive__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 600px) { .archive { width: calc(100% - 28px); } .archive__grid { grid-template-columns: 1fr; } }
+</style>
