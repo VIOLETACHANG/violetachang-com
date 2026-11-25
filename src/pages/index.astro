@@ -1,121 +1,214 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import NewsCard from '../components/NewsCard.astro';
+import SocialChannels from '../components/SocialChannels.astro';
+import { articlePath } from '../lib/article-url';
+import siteSettings from '../data/site-settings.json';
+import { articleImageUrl } from '../lib/images';
+import { slugifyTaxonomy } from '../lib/taxonomy';
+import { safeExternalUrl } from '../lib/urls';
 
-const ahora = new Date();
-const todasLasNoticias = await getCollection('noticias', ({ data }) => {
-  return data.pubDate <= ahora;
-});
-const noticias = todasLasNoticias.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
-const principal = noticias[0];
-const secundarias = noticias.slice(1);
+const now = new Date();
+const allNews = await getCollection('noticias', ({ data }) => data.pubDate <= now);
+const news = allNews.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const principal = news.find((item) => item.data.titular_principal) ?? news[0];
+const secondary = news.filter((item) => item.slug !== principal?.slug);
+const heroImage = articleImageUrl(principal?.data.image, 'hero');
+const mobileHeroImage = principal?.data.imageMobile
+  ? articleImageUrl(principal.data.imageMobile, 'source')
+  : articleImageUrl(principal?.data.image, 'heroMobile');
+const heroAuthor = principal?.data.author?.trim() || 'Redacción';
+const heroAuthorProfile = safeExternalUrl(principal?.data.authorUrl);
+const youtubeUrl = safeExternalUrl(siteSettings.youtubeUrl);
+const tiktokUrl = safeExternalUrl(siteSettings.tiktokUrl);
+const whatsappUrl = safeExternalUrl(siteSettings.whatsappUrl);
+const bannerUrl = safeExternalUrl(siteSettings.bannerUrl);
 ---
-<BaseLayout title="Violeta Chang | Veritas Ante Omnia — Portal de Noticias">
-  <style>
-    .container { max-width: 1200px; margin: 25px auto; padding: 0 20px; display: grid; grid-template-columns: 2.3fr 1fr; gap: 30px; }
-    @media (max-width: 850px) { .container { grid-template-columns: 1fr; } }
-    .hero-news { background: #F8FAFC; border-radius: 12px; overflow: hidden; border: 1px solid #E2E8F0; margin-bottom: 25px; }
-    .hero-news img { width: 100%; max-height: 420px; object-fit: cover; }
-    .hero-content { padding: 24px; }
-    .badge { display: inline-block; background: #4C1D95; color: #FFF; font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; margin-bottom: 10px; }
-    .badge-sponsored { background: #F59E0B; color: #000; margin-left: 6px; }
-    .hero-content h2 a { font-family: 'Merriweather', serif; font-size: 1.85rem; color: #1E1B4B; text-decoration: none; }
-    .hero-content h2 a:hover { color: #36005B; }
-    .meta { font-size: 0.85rem; color: #475569; margin: 10px 0; }
-    .news-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    @media (max-width: 600px) { .news-grid { grid-template-columns: 1fr; } }
-    .card { border: 1px solid #E2E8F0; border-radius: 10px; padding: 18px; background: #FFF; }
-    .card img { width: 100%; height: 180px; object-fit: cover; border-radius: 6px; margin-bottom: 10px; }
-    .card h3 a { font-family: 'Merriweather', serif; font-size: 1.15rem; color: #1E1B4B; text-decoration: none; }
-    .card h3 a:hover { color: #6D28D9; }
-    aside { display: flex; flex-direction: column; gap: 22px; }
-    .widget { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 18px; }
-    .widget h4 { color: #36005B; border-bottom: 2px solid #25D366; padding-bottom: 6px; margin-bottom: 12px; font-size: 1rem; text-transform: uppercase; }
-    .ad-box { background: #FFF; border: 1px dashed #94A3B8; height: 250px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 15px; border-radius: 8px; color: #475569; }
-    .btn-wa { display: block; background: #01FB01; color: #052E16; font-weight: 800; padding: 10px 16px; border-radius: 8px; text-decoration: none; margin-top: 10px; text-align: center; }
-    .mediakit-section { max-width: 1200px; margin: 40px auto; padding: 30px 20px; background: #F5F3FF; border-radius: 12px; border: 1px solid #DDD6FE; }
-    .mediakit-section h2 { color: #4C1D95; font-family: 'Merriweather', serif; margin-bottom: 10px; }
-    .tarifas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-top: 18px; }
-    .tarifa-card { background: #FFF; padding: 20px; border-radius: 10px; border-top: 4px solid #01FB01; }
-  </style>
+<BaseLayout
+  title="Violeta Chang | Noticias de Chile y el mundo"
+  description="Noticias de Chile y el mundo sobre política, economía, ciencia, tecnología, educación, cultura y actualidad. Veritas Ante Omnia."
+>
+  <main class="home-shell">
+    <section class="news-column" aria-label="Noticias destacadas">
+      <div class="section-heading">
+        <p class="eyebrow">Periodismo desde Chile</p>
+        <h2>Actualidad, contexto y nuevas perspectivas</h2>
+      </div>
 
-  <main class="container">
-    <section>
-      {principal && (
+      {principal ? (
         <article class="hero-news">
-          {principal.data.image && <img src={principal.data.image} alt={principal.data.title} />}
-          <div class="hero-content">
-            <span class="badge">{principal.data.category}</span>
-            {principal.data.sponsored && <span class="badge badge-sponsored">Contenido Patrocinado • {principal.data.sponsorName}</span>}
-            <h2><a href={`/noticias/${principal.slug}`}>{principal.data.title}</a></h2>
-            <div class="meta">Por <strong>{principal.data.author}</strong> {principal.data.authorRole ? `(${principal.data.authorRole})` : ''} • {principal.data.pubDate.toLocaleDateString('es-CL')}</div>
-            <p>{principal.data.description}</p>
+          {heroImage && <a href={articlePath(principal.slug, principal.data.urlSlug)} class="hero-news__image-link" aria-label={`Leer: ${principal.data.title}`}><picture><source media="(max-width: 640px)" srcset={mobileHeroImage} /><img class="hero-news__image" src={heroImage} alt={principal.data.title} width="1280" height="720" fetchpriority="high" /></picture></a>}
+          <div class="hero-news__content">
+            <div class="badges">
+              <a class="badge" href={`/categorias/${slugifyTaxonomy(principal.data.category)}/`}>{principal.data.category}</a>
+              {principal.data.es_comunicado && <span class="badge badge--neutral">Comunicado de prensa</span>}
+              {principal.data.sponsored && <span class="badge badge--gold">Contenido patrocinado{principal.data.sponsorName ? ` · ${principal.data.sponsorName}` : ''}</span>}
+            </div>
+            <h1 class="hero-news__title"><a href={articlePath(principal.slug, principal.data.urlSlug)}>{principal.data.title}</a></h1>
+            <p class="hero-news__summary">{principal.data.description}</p>
+            <p class="meta-line">
+              {heroAuthorProfile ? <a href={heroAuthorProfile} target="_blank" rel="noopener noreferrer">{heroAuthor}</a> : heroAuthor}
+              <span aria-hidden="true"> · </span>
+              <time datetime={principal.data.pubDate.toISOString()}>{principal.data.pubDate.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Santiago' })}</time>
+            </p>
+            {principal.data.tags?.length > 0 && <ul class="tag-list" aria-label="Etiquetas de la noticia">{principal.data.tags.slice(0, 5).map((tag) => <li><a href={`/etiquetas/${slugifyTaxonomy(tag)}/`}>{tag}</a></li>)}</ul>}
           </div>
         </article>
+      ) : (
+        <div class="empty-state">
+          <h1>Bienvenidos a Violeta Chang</h1>
+          <p>Pronto encontrarás aquí noticias y análisis. El equipo editorial puede preparar artículos desde el <a href="/admin/">panel de redacción</a>.</p>
+        </div>
       )}
 
-      <div class="news-grid">
-        {secundarias.map((item) => (
-          <article class="card">
-            {item.data.image && <img src={item.data.image} alt={item.data.title} />}
-            <span class="badge">{item.data.category}</span>
-            {item.data.sponsored && <span class="badge badge-sponsored">Patrocinado</span>}
-            <h3><a href={`/noticias/${item.slug}`}>{item.data.title}</a></h3>
-            <div class="meta">Por <strong>{item.data.author}</strong> • {item.data.pubDate.toLocaleDateString('es-CL')}</div>
-            <p style="font-size:0.92rem;">{item.data.description}</p>
-          </article>
-        ))}
-      </div>
+      {secondary.length > 0 && (
+        <section class="latest-section" aria-labelledby="latest-heading">
+          <div class="section-heading section-heading--compact">
+            <p class="eyebrow">Lo más reciente</p>
+            <h2 id="latest-heading">Más noticias</h2>
+          </div>
+          <div class="news-grid">
+            {secondary.map((article) => <NewsCard article={article} />)}
+          </div>
+        </section>
+      )}
     </section>
 
-    <aside>
-      <div class="widget" id="podcast">
-        <h4>Podcast &amp; Multimedia</h4>
-        <p style="font-size:0.9rem; margin-bottom:10px;">Sigue nuestros titulares en YouTube y cápsulas en TikTok:</p>
-        <a href="‎https://whatsapp.com/channel/0029VbE2b9c3QxRujnWkir04" class="btn-wa" target="_blank">Sigue el Canal de WhatsApp del Medio</a>
-      </div>
-
-      <div class="widget">
-        <h4>Auspiciadores</h4>
-        <div class="ad-box">
-          <a href="https://www.tiktok.com/@hmb_spa" target="_blank">
-  <img src="/banner-hmb.jpg" alt="HMB SPA - BSL SPA" width="300" height="250" style="border-radius: 12px;" />
-</a>
-          
-        </div>
-      </div>
-
-      <div class="widget">
-        <h4>Equipo Editorial</h4>
-        <p style="font-size:0.88rem;">
-          <strong>Directora:</strong> Violeta Chang <br>
-          <strong>Director Suplente:</strong> Eduardo D'Alencon <br>
-          <strong>Prensa:</strong> <a href="mailto:prensa@violetachang.com" class="seo-link">prensa@violetachang.com</a>
+    <aside class="sidebar" aria-label="Multimedia y auspiciadores">
+      <section class="widget" id="multimedia">
+        <h2>Noticias en video</h2>
+        <p class="widget-intro">
+          Sigue nuestros titulares en {youtubeUrl ? <a href={youtubeUrl} target="_blank" rel="noopener noreferrer">YouTube</a> : 'YouTube'}
+          y las cápsulas informativas en {tiktokUrl ? <a href={tiktokUrl} target="_blank" rel="noopener noreferrer">TikTok</a> : 'TikTok'}.
         </p>
-      </div>
+        <SocialChannels youtubeUrl={youtubeUrl} tiktokUrl={tiktokUrl} whatsappUrl={whatsappUrl} />
+      </section>
+
+      <section class="widget">
+        <h2>Auspiciadores</h2>
+        <div class="ad-box ad-box--square">
+          <a href="https://www.tiktok.com/@hmb_spa" target="_blank" rel="noopener noreferrer sponsored" aria-label="Visitar HMB SPA en TikTok">
+            <img src="/banner-hmb.webp" alt="HMB SPA — servicios de spa" width="600" height="503" loading="lazy" />
+          </a>
+        </div>
+      </section>
+
+      <section class="widget team-widget">
+        <h2>Equipo editorial</h2>
+        <p><strong>Directora responsable:</strong> Violeta Chang B.</p>
+        <p><strong>Director suplente:</strong> Eduardo D'Alencon F.</p>
+        <a href="/quienes-somos/">Conoce el medio</a>
+      </section>
     </aside>
   </main>
 
-  <section class="mediakit-section" id="publicidad">
-    <h2>Publica y anuncia aquí</h2>
-    <p>Posiciona tu empresa u organización en un medio serio, independiente y multiplataforma.</p>
-    <div class="tarifas-grid">
-      <div class="tarifa-card">
-        <h3>Aporte Voluntario (300x30)</h3>
-        <p>Apoya con tu aporte aquí cuando quieras.</p>
-      </div>
-      <div class="tarifa-card">
-        <h3>Banner Lateral (300x250)</h3>
-        <a href="https://www.electronicaacil.cl" target="_blank">
-  <img src="/banner-acil.jpg" alt="ACIL" width="300" height="250" style="border-radius: 12px; margin-top: 12px;" />
-</a>
-        <p>Presencia permanente junto a cada reportaje y crónica.</p>
-      </div>
-      <div class="tarifa-card">
-        <h3> Contenido patrocinado</h3>
-        <p>Artículo editorial sobre tu marca con enlaces SEO permanentes e identificación legal.</p>
-      </div>
+  {siteSettings.bannerImage && (
+    <aside class="home-banner" aria-label="Publicidad">
+      {bannerUrl ? (
+        <a href={bannerUrl} target="_blank" rel="noopener noreferrer sponsored" aria-label={siteSettings.bannerAlt || 'Visitar al auspiciador'}>
+          <img src={siteSettings.bannerImage} alt={siteSettings.bannerAlt || 'Publicidad de un auspiciador'} loading="lazy" />
+        </a>
+      ) : (
+        <img src={siteSettings.bannerImage} alt={siteSettings.bannerAlt || 'Publicidad de un auspiciador'} loading="lazy" />
+      )}
+    </aside>
+  )}
+
+  <section class="media-kit" id="publicidad" aria-labelledby="ads-heading">
+    <p class="eyebrow">Alianzas comerciales</p>
+    <h2 id="ads-heading">Anuncia en Violeta Chang</h2>
+    <p>Consulta los formatos y opciones de colaboración disponibles para empresas y organizaciones.</p>
+    <div class="media-kit__grid">
+      <article class="media-kit__card">
+        <h3>Publicidad junto a las noticias</h3>
+        <p>Espacios para marcas y organizaciones que quieran llegar a una audiencia informada.</p>
+        <a href="mailto:contacto@violetachang.com?subject=Publicidad%20en%20Violeta%20Chang">Consultar disponibilidad</a>
+      </article>
+      <article class="media-kit__card media-kit__card--banner">
+        <h3>Publicidad después de las noticias</h3>
+        <a href="https://www.electronicaacil.cl" target="_blank" rel="noopener noreferrer sponsored" aria-label="Visitar Electrónica ACIL">
+          <img src="/banner-acil.webp" alt="Electrónica ACIL" width="600" height="498" loading="lazy" />
+        </a>
+        <p>Un espacio visible al terminar la actualidad del día.</p>
+      </article>
+      <article class="media-kit__card">
+        <h3>Contenido patrocinado</h3>
+        <p>Consulta por publicaciones identificadas claramente como contenido patrocinado.</p>
+        <a href="mailto:contacto@violetachang.com?subject=Contenido%20patrocinado">Solicitar información</a>
+      </article>
     </div>
-    <p style="margin-top:18px;">Solicita nuestro Media Kit y valores a: <a href="mailto:contacto@violetachang.com" class="seo-link">contacto@violetachang.com</a></p>
+    <p class="media-kit__contact">Contacto comercial: <a href="mailto:contacto@violetachang.com">contacto@violetachang.com</a></p>
   </section>
 </BaseLayout>
+
+<style>
+  .home-shell { width: min(1200px, calc(100% - 40px)); margin: 30px auto 0; display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(270px, .9fr); gap: 28px; align-items: start; }
+  .section-heading { margin: 0 0 16px; }
+  .section-heading h2 { margin: 0; color: #1E1B4B; font-family: 'Merriweather', Georgia, serif; font-size: clamp(1.4rem, 2.5vw, 1.9rem); line-height: 1.35; }
+  .section-heading--compact { margin-top: 30px; }
+  .eyebrow { margin: 0 0 4px; color: #806000; font-size: .75rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+  .hero-news { overflow: hidden; border: 1px solid #E7E1EF; border-radius: 14px; background: #fff; box-shadow: 0 5px 20px rgba(30,27,75,.06); }
+  .hero-news__image-link { display: block; background: #F8F6FB; }
+  .hero-news__image-link picture { display: block; }
+  .hero-news__image { display: block; width: 100%; aspect-ratio: 16 / 9; max-height: 510px; object-fit: cover; }
+  .hero-news__content { padding: clamp(18px, 3vw, 28px); }
+  .badges { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+  .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; background: #F1EAFB; color: #4B1D91; font-size: .72rem; font-weight: 800; text-decoration: none; text-transform: uppercase; }
+  .badge--neutral { background: #EEF0F4; color: #334155; }
+  .badge--gold { background: #F4E6C4; color: #5B4300; }
+  .hero-news__title { margin: 0; font-family: 'Merriweather', Georgia, serif; font-size: clamp(1.55rem, 3vw, 2.25rem); line-height: 1.3; }
+  .hero-news__title a { color: #1E1B4B; text-decoration: none; }
+  .hero-news__title a:hover { color: #4B1D91; text-decoration: underline; text-decoration-color: #C7A75E; text-underline-offset: 5px; }
+  .hero-news__summary { margin: 12px 0; color: #475569; font-size: 1.02rem; }
+  .meta-line { margin: 0; color: #64748B; font-size: .83rem; }
+  .meta-line a { color: #4B1D91; font-weight: 700; }
+  .tag-list { display: flex; flex-wrap: wrap; gap: 7px; margin: 14px 0 0; padding: 0; list-style: none; }
+  .tag-list a { display: inline-block; padding: 3px 8px; border: 1px solid #E6D7AE; border-radius: 999px; color: #5B4300; font-size: .74rem; text-decoration: none; }
+  .tag-list a:hover { background: #F8F1DE; }
+  .news-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .sidebar { display: grid; gap: 18px; }
+  .widget { min-width: 0; padding: 18px; border: 1px solid #E7E1EF; border-radius: 12px; background: #FBFAFD; }
+  .widget h2 { margin: 0 0 10px; padding-bottom: 8px; border-bottom: 2px solid #C7A75E; color: #4B1D91; font-family: 'Merriweather', Georgia, serif; font-size: 1.15rem; }
+  .widget-intro { margin: 0 0 12px; color: #475569; font-size: .88rem; }
+  .ad-box { display: grid; place-items: center; width: 100%; aspect-ratio: 6 / 5; overflow: hidden; border: 1px solid #E2E8F0; border-radius: 8px; background: #fff; }
+  .ad-box a, .ad-box img { display: block; width: 100%; height: 100%; }
+  .ad-box img { object-fit: contain; }
+  .home-banner { width: min(1200px, calc(100% - 40px)); margin: 20px auto 0; text-align: center; }
+  .home-banner a, .home-banner img { display: block; width: 100%; }
+  .home-banner img { max-height: 180px; object-fit: contain; }
+  .home-banner a { text-decoration: none; }
+  .team-widget p { margin: 6px 0; color: #475569; font-size: .87rem; }
+  .team-widget a { display: inline-block; margin-top: 8px; color: #4B1D91; font-weight: 700; text-underline-offset: 3px; }
+  .media-kit { width: min(1200px, calc(100% - 40px)); margin: 42px auto; padding: clamp(20px, 3vw, 34px); border: 1px solid #E4D8F2; border-radius: 14px; background: #F8F6FB; }
+  .media-kit h2 { margin: 0; color: #4B1D91; font-family: 'Merriweather', Georgia, serif; font-size: clamp(1.5rem, 2.5vw, 2rem); }
+  .media-kit > p:not(.eyebrow) { color: #475569; }
+  .media-kit__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
+  .media-kit__card { min-width: 0; padding: 18px; border: 1px solid #E7E1EF; border-top: 4px solid #C7A75E; border-radius: 10px; background: #fff; }
+  .media-kit__card h3 { margin: 0 0 8px; color: #1E1B4B; font-size: 1rem; }
+  .media-kit__card p { color: #475569; font-size: .87rem; }
+  .media-kit__card a { color: #4B1D91; font-weight: 700; text-underline-offset: 3px; }
+  .media-kit__card--banner img { display: block; width: min(100%, 420px); height: auto; object-fit: contain; margin: 10px auto; }
+  .media-kit__contact { margin-top: 18px; font-size: .9rem; }
+  .media-kit__contact a { color: #4B1D91; font-weight: 700; }
+  .empty-state { padding: 30px; border: 1px solid #E7E1EF; border-radius: 12px; background: #FBFAFD; }
+  .empty-state h1 { margin-top: 0; font-family: 'Merriweather', Georgia, serif; }
+  .empty-state a { color: #4B1D91; }
+  @media (max-width: 920px) {
+    .home-shell { grid-template-columns: minmax(0, 1.7fr) minmax(250px, .9fr); gap: 18px; }
+    .media-kit__grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 720px) {
+    .home-shell { grid-template-columns: 1fr; width: min(100% - 28px, 640px); margin-top: 22px; }
+    .sidebar { grid-template-columns: 1fr 1fr; align-items: start; }
+    .sidebar .widget:first-child { grid-column: 1 / -1; }
+    .news-grid { grid-template-columns: 1fr; }
+    .hero-news__image { aspect-ratio: 4 / 5; max-height: none; }
+    .media-kit { width: calc(100% - 28px); }
+    .home-banner { width: calc(100% - 28px); }
+  }
+  @media (max-width: 480px) {
+    .sidebar, .media-kit__grid { grid-template-columns: 1fr; }
+    .sidebar .widget:first-child { grid-column: auto; }
+  }
+</style>

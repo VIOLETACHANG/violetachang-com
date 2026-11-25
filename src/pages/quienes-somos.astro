@@ -1,0 +1,62 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import siteSettings from '../data/site-settings.json';
+import { safeExternalUrl } from '../lib/urls';
+
+const description = 'Conoce el equipo, propósito e información institucional del medio Violeta Chang, con sede en Chile.';
+const directorLinkedinUrl = safeExternalUrl(siteSettings.directorLinkedinUrl);
+const deputyLinkedinUrl = safeExternalUrl(siteSettings.deputyLinkedinUrl);
+---
+<BaseLayout title="Quiénes somos | Violeta Chang" description={description}>
+  <main class="about-page">
+    <p class="eyebrow">El medio</p>
+    <h1>Quiénes somos</h1>
+    <p class="about-page__lead">Violeta Chang es un medio de comunicación multiplataforma hecho desde Chile. Su lema, <em>Veritas Ante Omnia</em>, expresa el compromiso de poner la verdad por delante.</p>
+
+    <section class="about-panel">
+      <h2>Propósito</h2>
+      <p>Informar sobre Chile y el mundo con noticias, reportajes y análisis accesibles para una audiencia amplia, dando espacio a temas de actualidad, política, economía, ciencia, tecnología, educación, cultura y otros asuntos de interés público.</p>
+    </section>
+
+    <section class="about-panel">
+      <h2>Equipo responsable</h2>
+      <div class="people-grid">
+        <article class="person-card">
+          <h3>Violeta Chang B.</h3>
+          <p>Directora responsable</p>
+          {directorLinkedinUrl && <a href={directorLinkedinUrl} target="_blank" rel="noopener noreferrer">Perfil profesional en LinkedIn</a>}
+        </article>
+        <article class="person-card">
+          <h3>Eduardo D'Alencon F.</h3>
+          <p>Director suplente</p>
+          {deputyLinkedinUrl && <a href={deputyLinkedinUrl} target="_blank" rel="noopener noreferrer">Perfil profesional en LinkedIn</a>}
+        </article>
+      </div>
+    </section>
+
+    <section class="about-panel about-contact">
+      <h2>Contacto y propiedad</h2>
+      <p>Redacción: <a href="mailto:prensa@violetachang.com">prensa@violetachang.com</a></p>
+      <p>Contacto general: <a href="mailto:contacto@violetachang.com">contacto@violetachang.com</a></p>
+      <p>Propietario: Holding Le Merrer Chang SpA · RUT 78.532.209-6</p>
+      <p>O'Higgins #220, San Bernardo, Región Metropolitana, Chile.</p>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .about-page { width: min(900px, calc(100% - 40px)); margin: 38px auto 60px; min-height: 45vh; }
+  .eyebrow { margin: 0; color: #806000; font-size: .75rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+  h1 { margin: 4px 0 12px; color: #4B1D91; font-family: 'Merriweather', Georgia, serif; font-size: clamp(2rem, 4vw, 2.8rem); }
+  .about-page__lead { max-width: 72ch; color: #334155; font-size: 1.15rem; }
+  .about-panel { margin-top: 26px; padding: clamp(18px, 3vw, 26px); border: 1px solid #E7E1EF; border-radius: 12px; background: #FBFAFD; }
+  .about-panel h2 { margin: 0 0 10px; color: #1E1B4B; font-family: 'Merriweather', Georgia, serif; font-size: 1.25rem; }
+  .about-panel p { color: #475569; }
+  .people-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .person-card { padding: 16px; border-left: 3px solid #C7A75E; background: #fff; }
+  .person-card h3 { margin: 0; color: #4B1D91; font-size: 1.02rem; }
+  .person-card p { margin: 5px 0; font-size: .9rem; }
+  .person-card a, .about-contact a { color: #4B1D91; font-weight: 700; text-underline-offset: 3px; }
+  .about-contact p { margin: 8px 0; }
+  @media (max-width: 600px) { .about-page { width: calc(100% - 28px); } .people-grid { grid-template-columns: 1fr; } }
+</style>
