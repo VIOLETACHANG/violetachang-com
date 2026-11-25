@@ -1,4 +1,4 @@
-const SITE_ORIGIN = "https://www.violetachang.com";
+const SITE_ORIGIN = "https://violetachang.com";
 const CALLBACK_URL = `${SITE_ORIGIN}/api/callback`;
 const STATE_COOKIE = "vc_oauth_state";
 
