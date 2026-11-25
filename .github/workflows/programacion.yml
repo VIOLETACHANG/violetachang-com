@@ -1,17 +1,36 @@
 name: Publicar Noticias Programadas
+
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '0 12 * * *'
   workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publicacion-programada-main
+  cancel-in-progress: false
+
 jobs:
-  build:
+  rebuild-for-scheduled-news:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: date > .ultima-actualizacion
-      - run: |
+      - name: Obtener main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+
+      - name: Crear commit que dispara la reconstrucción de Cloudflare Pages
+        run: |
+          date -u +'%Y-%m-%dT%H:%M:%SZ' > .ultima-actualizacion
           git config user.name "Robot Editorial"
           git config user.email "prensa@violetachang.com"
           git add .ultima-actualizacion
-          git commit -m "Actualización programada" || exit 0
-          git push
+          if git diff --cached --quiet; then
+            echo "No hay cambios que publicar."
+            exit 0
+          fi
+          git commit -m "Actualización diaria de noticias programadas"
+          git push origin HEAD:main
