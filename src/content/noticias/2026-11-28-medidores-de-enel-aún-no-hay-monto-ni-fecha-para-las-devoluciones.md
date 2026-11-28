@@ -8,7 +8,7 @@ category: Crónica
 author: Violeta Chang
 authorRole: Directora
 image: https://res.cloudinary.com/b436ebkd/image/upload/v1795875743/Comisio%CC%81n_de_Mineri%CC%81a_y_Energi%CC%81a_de_la_Ca%CC%81mara.png
-photoCredit: "Foto: Archivo Violeta Chang"
+photoCredit: "Foto: Cámara de Diputados"
 titular_principal: true
 ---
 **El recambio llega al 76%, pero aún no hay monto ni fecha para las devoluciones.**
